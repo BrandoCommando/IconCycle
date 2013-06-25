@@ -26,6 +26,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 
 /**
  * The configuration screen for the {@link IconCycler IconCycler} AppWidget.
@@ -58,7 +59,10 @@ public class IconCyclerConfigureActivity extends Activity {
 
         if("cycle".equals(getIntent().getAction()))
         {
-            cycleWidgets();
+            Bundle b = icicle;
+            if(getIntent().getExtras() != null)
+                b = getIntent().getExtras();
+            cycleWidgets(b);
             finish();
             return;
         }
@@ -105,7 +109,7 @@ public class IconCyclerConfigureActivity extends Activity {
 		// If this activity was started with an intent without an app widget ID,
 		// finish with an error.
 		if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            cycleWidgets();
+            cycleWidgets(extras);
             finish();
 			return;
 		}
@@ -116,23 +120,23 @@ public class IconCyclerConfigureActivity extends Activity {
 
 	}
 
-    public void cycleWidgets()
+    public void cycleWidgets(Bundle extras)
     {
         AppWidgetManager man = AppWidgetManager.getInstance(this);
         ComponentName comp = new ComponentName(this, IconCycler.class);
         int[] widgets = man.getAppWidgetIds(comp);
-//            if(extras != null && extras.containsKey("widget") && Arrays.binarySearch(widgets, extras.getInt("widget")) > -1)
-//            {
-//                IconCycler.updateAppWidget(this, man, extras.getInt("widget"));
-//            } else {
-        for(int w : widgets)
+        if(extras != null && extras.containsKey("widget") && Arrays.binarySearch(widgets, extras.getInt("widget")) > -1)
         {
-            Bundle b = man.getAppWidgetOptions(w);
-            b.putInt("pos", b.getInt("pos") + 1);
-            man.updateAppWidgetOptions(w, b);
-            IconCycler.updateAppWidget(this, man, w);
+            IconCycler.updateAppWidget(this, man, extras.getInt("widget"));
+        } else {
+            for(int w : widgets)
+            {
+                Bundle b = man.getAppWidgetOptions(w);
+                b.putInt("pos", b.getInt("pos") + 1);
+                man.updateAppWidgetOptions(w, b);
+                IconCycler.updateAppWidget(this, man, w);
+            }
         }
-//            }
     }
 
     @Override

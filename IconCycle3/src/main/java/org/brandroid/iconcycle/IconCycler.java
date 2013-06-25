@@ -288,13 +288,16 @@ public class IconCycler extends AppWidgetProvider {
         }
         views.setImageViewBitmap(R.id.appwidget_icon, bmp);
 
-        Intent intent = new Intent(context, IconCyclerConfigureActivity.class);
-        intent.setAction("cycle");
+        int next = (pos + 1) % files.length;
+        Intent intent = new Intent(context, IconCycler.class);
+        intent.setAction("switch");
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-        intent.putExtra("sel", pos);
-        intent.putExtra("pos", pos);
+        intent.putExtra("sel", next);
+        intent.putExtra("pos", next);
         intent.putExtra("widget", appWidgetId);
-        PendingIntent pi = PendingIntent.getActivity(context, 0, intent, 0);
+        intent.setData(Uri.parse(intent.toUri(Intent.URI_INTENT_SCHEME)));
+        PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
         views.setOnClickPendingIntent(R.id.appwidget_frame, pi);
 
         mUpdates.put(appWidgetId, true);
