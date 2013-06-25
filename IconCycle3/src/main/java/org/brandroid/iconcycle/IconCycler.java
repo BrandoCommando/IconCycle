@@ -10,8 +10,15 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
+import android.widget.ListView;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
@@ -26,6 +33,100 @@ import java.io.IOException;
  */
 public class IconCycler extends AppWidgetProvider {
 
+    private static SparseArray<Boolean> mUpdates = new SparseArray<Boolean>();
+    private static SparseArray<Integer> mSelects = new SparseArray<Integer>();
+
+    public static class CycleWidgetService extends RemoteViewsService
+    {
+        @Override
+        public RemoteViewsFactory onGetViewFactory(Intent intent) {
+            return new CycleWidgetFactory(this.getApplicationContext(), intent);
+        }
+    }
+
+    static class CycleWidgetFactory implements RemoteViewsService.RemoteViewsFactory
+    {
+        private final Context mContext;
+        private final int mWidgetId;
+        private File[] mFiles;
+        private String mPath;
+        private int mSelectedIndex = -1;
+        public static int mSelectedColor = Color.BLACK;
+        public static int mUnselectedColor = Color.DKGRAY;
+
+        public CycleWidgetFactory(Context context, Intent intent)
+        {
+            mContext = context;
+            mWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
+                    AppWidgetManager.INVALID_APPWIDGET_ID);
+            mPath = intent.getStringExtra("path");
+            mSelectedIndex = intent.getIntExtra("sel", -1);
+            mFiles = new File(mPath).listFiles(IconCyclerConfigureActivity.PNGFinder);
+        }
+
+        @Override
+        public RemoteViews getViewAt(int i) {
+            RemoteViews rv = new RemoteViews(mContext.getPackageName(), R.layout.widget_list_item);
+            File f = mFiles[i];
+            Spannable span = new SpannableString(f.getName());
+            if(mSelectedIndex == i)
+                span.setSpan(new UnderlineSpan(), 0, f.getName().length(), Spanned.SPAN_COMPOSING);
+            rv.setTextViewText(android.R.id.text1, span);
+            try {
+                rv.setImageViewUri(android.R.id.icon, Uri.parse(f.getAbsolutePath()));
+            } catch(Exception e) {
+            }
+            Bundle b = new Bundle();
+            b.putInt("pos", i);
+            Intent fillin = new Intent();
+            fillin.putExtras(b);
+            rv.setOnClickFillInIntent(R.id.list_item, fillin);
+            return rv;
+        }
+
+        @Override
+        public void onCreate() {
+            mFiles = new File(mPath).listFiles(IconCyclerConfigureActivity.PNGFinder);
+        }
+
+        @Override
+        public void onDataSetChanged() {
+            mFiles = new File(mPath).listFiles(IconCyclerConfigureActivity.PNGFinder);
+            mSelectedIndex = mSelects.get(mWidgetId);
+        }
+
+        @Override
+        public void onDestroy() {
+
+        }
+
+        @Override
+        public int getCount() {
+            return mFiles.length;
+        }
+
+        @Override
+        public RemoteViews getLoadingView() {
+            RemoteViews rv = new RemoteViews(mContext.getPackageName(), R.layout.widget_list_item);
+            return rv;
+        }
+
+        @Override
+        public int getViewTypeCount() {
+            return 1;
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return i;
+        }
+
+        @Override
+        public boolean hasStableIds() {
+            return false;
+        }
+    }
+
 	@Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager,
 			int[] appWidgetIds) {
@@ -34,6 +135,7 @@ public class IconCycler extends AppWidgetProvider {
 		for (int i = 0; i < N; i++) {
 			updateAppWidget(context, appWidgetManager, appWidgetIds[i]);
 		}
+        super.onUpdate(context, appWidgetManager, appWidgetIds);
 	}
 
 	@Override
@@ -73,110 +175,29 @@ public class IconCycler extends AppWidgetProvider {
         Log.v("IconCycle", "Widget Options Changed: " + BundleToString(b));
         boolean wide2 = b.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 90) > 196;
         boolean wide = b.getBoolean("wide", wide2);
-        CycleWidgetFactory.mSelectedColor = context.getResources().getColor(android.R.color.primary_text_dark);
-        CycleWidgetFactory.mSelectedColor = context.getResources().getColor(android.R.color.tertiary_text_dark);
+        CycleWidgetFactory.mSelectedColor = context.getResources().getColor(android.R.color.primary_text_light);
+        CycleWidgetFactory.mSelectedColor = context.getResources().getColor(android.R.color.tertiary_text_light);
         if(wide != wide2)
-            updateAppWidget(context, man, appWidgetId);
-    }
-
-    public static class CycleWidgetService extends RemoteViewsService
-    {
-        @Override
-        public RemoteViewsFactory onGetViewFactory(Intent intent) {
-            return new CycleWidgetFactory(this.getApplicationContext(), intent);
-        }
-    }
-
-    static class CycleWidgetFactory implements RemoteViewsService.RemoteViewsFactory
-    {
-        private final Context mContext;
-        private final int mWidgetId;
-        private File[] mFiles;
-        private String mPath;
-        private int mSelectedIndex = -1;
-        public static int mSelectedColor = Color.BLACK;
-        public static int mUnselectedColor = Color.DKGRAY;
-
-        public CycleWidgetFactory(Context context, Intent intent)
         {
-            mContext = context;
-            mWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
-                    AppWidgetManager.INVALID_APPWIDGET_ID);
-            mPath = intent.getStringExtra("path");
-            mSelectedIndex = intent.getIntExtra("sel", -1);
-            mFiles = new File(mPath).listFiles(IconCyclerConfigureActivity.PNGFinder);
-        }
-
-        @Override
-        public RemoteViews getViewAt(int i) {
-            RemoteViews rv = new RemoteViews(mContext.getPackageName(), R.layout.widget_list_item);
-            File f = mFiles[i];
-            rv.setTextViewText(android.R.id.text1, f.getName());
-            rv.setViewVisibility(android.R.id.icon, View.VISIBLE);
-            try {
-                rv.setImageViewUri(android.R.id.icon, Uri.parse(f.getAbsolutePath()));
-            } catch(Exception e) {
-            }
-            Bundle b = new Bundle();
-            b.putInt("pos", i);
-            Intent fillin = new Intent();
-            fillin.putExtras(b);
-            rv.setOnClickFillInIntent(R.id.list_item, fillin);
-            return rv;
-        }
-
-        @Override
-        public void onCreate() {
-            mFiles = new File(mPath).listFiles(IconCyclerConfigureActivity.PNGFinder);
-        }
-
-        @Override
-        public void onDataSetChanged() {
-            mFiles = new File(mPath).listFiles(IconCyclerConfigureActivity.PNGFinder);
-        }
-
-        @Override
-        public void onDestroy() {
-
-        }
-
-        @Override
-        public int getCount() {
-            return mFiles.length;
-        }
-
-        @Override
-        public RemoteViews getLoadingView() {
-            RemoteViews rv = new RemoteViews(mContext.getPackageName(), R.layout.widget_list_item);
-            return rv;
-        }
-
-        @Override
-        public int getViewTypeCount() {
-            return 1;
-        }
-
-        @Override
-        public long getItemId(int i) {
-            return i;
-        }
-
-        @Override
-        public boolean hasStableIds() {
-            return false;
+            mUpdates.delete(appWidgetId);
+            updateAppWidget(context, man, appWidgetId);
         }
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        AppWidgetManager man = AppWidgetManager.getInstance(context);
         if("switch".equals(intent.getAction())) {
+            AppWidgetManager man = AppWidgetManager.getInstance(context);
             int w = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
                         AppWidgetManager.INVALID_APPWIDGET_ID);
             int pos = intent.getIntExtra("pos", 0);
             //Toast.makeText(context, "New pos: " + pos, Toast.LENGTH_SHORT).show();
             Bundle b = man.getAppWidgetOptions(w);
+            int last = b.getInt("pos");
+            b.putInt("last", last);
             b.putInt("pos", pos);
+            b.putInt("sel", pos);
+            mUpdates.put(w, true);
             man.updateAppWidgetOptions(w, b);
             updateAppWidget(context, man, w);
         }
@@ -186,6 +207,15 @@ public class IconCycler extends AppWidgetProvider {
     static void updateAppWidget(Context context,
 			AppWidgetManager man, int appWidgetId) {
 
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread thread, Throwable ex) {
+                Log.e("IconCycle", "Uncaught thread!", ex);
+            }
+        });
+
+        Log.v("IconCycler", "IconCycler.updateAppWidget(" + appWidgetId + ")");
+
 		final String path = IconCyclerConfigureActivity.loadTitlePref(
                 context, appWidgetId);
         File dir = new File(path);
@@ -194,12 +224,17 @@ public class IconCycler extends AppWidgetProvider {
 
         Bundle b = man.getAppWidgetOptions(appWidgetId);
         int pos = b.getInt("pos", 0);
+        int last = b.getInt("last", -1);
+        boolean update = mUpdates.get(appWidgetId, false);
 
         File[] files = dir.listFiles(IconCyclerConfigureActivity.PNGFinder);
         if(files.length == 0) return;
         File file = files[pos % files.length];
+        pos = pos % files.length;
 
         b.putInt("pos", pos);
+
+        mSelects.put(appWidgetId, pos);
 
         int layout = R.layout.icon_cycler;
         boolean wide = false;
@@ -214,7 +249,7 @@ public class IconCycler extends AppWidgetProvider {
 		// Construct the RemoteViews object
 		RemoteViews views = new RemoteViews(context.getPackageName(), layout);
 
-        if(wide)
+        if(wide && !update)
         {
             Intent intent = new Intent(context, CycleWidgetService.class);
             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
@@ -230,9 +265,13 @@ public class IconCycler extends AppWidgetProvider {
             PendingIntent switchPending = PendingIntent.getBroadcast(context, 0, switchIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT);
             views.setPendingIntentTemplate(R.id.list_files, switchPending);
+        } else if(wide) {
+            man.notifyAppWidgetViewDataChanged(appWidgetId, R.id.list_files);
+            //views.setInt(R.id.list_files, "setSelection", pos);
+            views.setScrollPosition(R.id.list_files, pos % files.length);
         }
 
-		views.setTextViewText(R.id.appwidget_text, file.getName());;
+		views.setTextViewText(R.id.appwidget_text, file.getName());
 
         Bitmap bmp = null;
         FileInputStream in = null;
@@ -252,11 +291,25 @@ public class IconCycler extends AppWidgetProvider {
         Intent intent = new Intent(context, IconCyclerConfigureActivity.class);
         intent.setAction("cycle");
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        intent.putExtra("sel", pos);
+        intent.putExtra("pos", pos);
         intent.putExtra("widget", appWidgetId);
         PendingIntent pi = PendingIntent.getActivity(context, 0, intent, 0);
         views.setOnClickPendingIntent(R.id.appwidget_frame, pi);
 
+        mUpdates.put(appWidgetId, true);
+
 		// Instruct the widget manager to update the widget
-		man.updateAppWidget(appWidgetId, views);
+        if(update)
+        {
+            man.partiallyUpdateAppWidget(appWidgetId, views);
+            if(wide)
+            {
+                views.setScrollPosition(R.id.list_files, pos % files.length);
+                man.partiallyUpdateAppWidget(appWidgetId, views);
+            }
+        }
+        else
+            man.updateAppWidget(appWidgetId, views);
 	}
 }

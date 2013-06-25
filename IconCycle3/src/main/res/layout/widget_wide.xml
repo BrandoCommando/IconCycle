@@ -13,10 +13,11 @@
             android:layout_gravity="center"/>
 
     <ListView
-            android:background="@drawable/simple_border"
+            android:background="@android:drawable/dialog_frame"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:id="@+id/list_files"
             android:layout_gravity="center"
+
             tools:listitem="@layout/widget_list_item"/>
 </LinearLayout>
