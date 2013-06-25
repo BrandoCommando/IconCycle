@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp" >
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="@string/configure" />
+
+    <EditText
+        android:id="@+id/appwidget_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:text="/mnt/sdcard/"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:orientation="horizontal">
+
+        <Button android:id="@android:id/button1"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Pick..."
+                />
+
+        <Button
+            android:id="@+id/test_button"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Test Path"
+            />
+
+        <Button
+            android:id="@+id/add_button"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="@string/add_widget" />
+
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/text_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Please test path."
+        />
+
+    <GridView
+            android:layout_marginTop="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/grid_preview"
+            android:layout_gravity="left|center_vertical"
+            android:numColumns="auto_fit"/>
+
+
+</LinearLayout>

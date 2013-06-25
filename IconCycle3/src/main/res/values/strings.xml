@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Icon Cycle</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">No widgets defined. Please add to one to the homescreen!</string>
+    <string name="appwidget_text">/mnt/sdcard/icons/</string>
+    <string name="configure">Enter folder path containing PNG icons:</string>
+    <string name="add_widget">Update</string>
+
+</resources>
