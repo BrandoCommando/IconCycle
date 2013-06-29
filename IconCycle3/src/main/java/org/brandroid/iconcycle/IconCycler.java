@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -12,13 +13,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.util.SparseArray;
-import android.view.View;
-import android.widget.ListView;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
@@ -33,8 +31,8 @@ import java.io.IOException;
  */
 public class IconCycler extends AppWidgetProvider {
 
-    private static SparseArray<Boolean> mUpdates = new SparseArray<Boolean>();
-    private static SparseArray<Integer> mSelects = new SparseArray<Integer>();
+    private static final SparseArray<Boolean> mUpdates = new SparseArray<Boolean>();
+    private static final SparseArray<Integer> mSelects = new SparseArray<Integer>();
 
     public static class CycleWidgetService extends RemoteViewsService
     {
@@ -91,8 +89,11 @@ public class IconCycler extends AppWidgetProvider {
 
         @Override
         public void onDataSetChanged() {
-            mFiles = new File(mPath).listFiles(IconCyclerConfigureActivity.PNGFinder);
-            mSelectedIndex = mSelects.get(mWidgetId);
+            if(mPath != null)
+                mFiles = new File(mPath).listFiles(IconCyclerConfigureActivity.PNGFinder);
+            if(mSelects != null)
+                mSelectedIndex = mSelects.get(mWidgetId);
+            mUpdates.clear();
         }
 
         @Override
@@ -191,6 +192,9 @@ public class IconCycler extends AppWidgetProvider {
             int w = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,
                         AppWidgetManager.INVALID_APPWIDGET_ID);
             int pos = intent.getIntExtra("pos", 0);
+            SharedPreferences sp = context.getSharedPreferences("stats", 0);
+            int cycles = sp.getInt("cycles", 0);
+            sp.edit().putInt("cycles", cycles + 1).apply();
             //Toast.makeText(context, "New pos: " + pos, Toast.LENGTH_SHORT).show();
             Bundle b = man.getAppWidgetOptions(w);
             int last = b.getInt("pos");
